@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CAP.SQLToMongoMigrator
+namespace CAP.SQLToMongoMigrator.Model
 {
     using System;
     using System.Data.Entity;

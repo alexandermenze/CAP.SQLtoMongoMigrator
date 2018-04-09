@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 
-namespace CAP.SQLToMongoMigrator
+namespace CAP.SQLToMongoMigrator.Source
 {
     internal class Program
     {
