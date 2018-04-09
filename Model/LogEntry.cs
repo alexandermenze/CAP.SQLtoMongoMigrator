@@ -1,12 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CAP.SQLToMongoMigrator.Model
 {
-    class LogEntry
+    internal class LogEntry
     {
+        private int LogId { get; set; }
+        private DateTime Date { get; set; }
+        private string Machine { get; set; }
+        private string Thread { get; set; }
+        private string Level { get; set; }
+        private string Logger { get; set; }
+        private string Message { get; set; }
+        private string Exception { get; set; }
     }
 }
