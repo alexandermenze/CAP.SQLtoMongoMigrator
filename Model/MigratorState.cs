@@ -1,11 +1,12 @@
 ﻿using MongoDB.Driver;
+using System;
 
 namespace CAP.SQLToMongoMigrator.Model
 {
     internal class MigratorState
     {
-        public SqlServerLogsEntities SqlClient { get; set; }
-        public MongoClient MongoClient { get; set; }
+        public Func<SqlServerLogsEntities> SqlClientFactory { get; set; }
+        public Func<MongoClient> MongoClientFactory { get; set; }
         public IntRange IdRange { get; set; }
     }
 }
