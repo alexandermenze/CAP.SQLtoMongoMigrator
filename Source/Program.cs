@@ -1,40 +1,48 @@
 ﻿using CAP.SQLToMongoMigrator.Model;
 using MongoDB.Driver;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CAP.SQLToMongoMigrator.Source
 {
     internal class Program
-    {
+    { 
         internal static void Main(string[] args)
         {
-            var mongoClient = CreateMongoClient();
             using(var sqlClient = new SqlServerLogsEntities())
             {
-                var logEntries = sqlClient.CustomsApprovalLogs
-                    .OrderBy((c) => c.Id)
-                    .Take(10)
-                    .Select((c) =>
-                        new LogEntry
-                        {
-                            LogId = c.Id,
-                            Date = c.Date,
-                            Machine = c.Machine,
-                            Thread = c.Thread,
-                            Level = c.Level,
-                            Logger = c.Logger,
-                            Message = c.Message,
-                            Exception = c.Exception
-                        }).ToList();
+                var mongoClient = CreateMongoClient();
+                int lastId = FindLastId(sqlClient);
+                IList<IntRange> sqlServerParts = new List<IntRange>();
 
-                mongoClient.GetDatabase("zoll_logs").GetCollection<LogEntry>("logs").InsertMany(logEntries);
+                for (int i = 0; i <= lastId; i += 1000)
+                {
+                    sqlServerParts.Add(new IntRange(i, i + 999));
+                }
+
+                RunMigrators(sqlClient, sqlServerParts, mongoClient);
             }
         }
 
-        private static MongoClient CreateMongoClient()
+        private static void RunMigrators(SqlServerLogsEntities sqlClient, IList<IntRange> sqlServerParts, MongoClient mongoClient) 
+            => Parallel.ForEach(sqlServerParts, (idRange) =>
+                {
+                    Migrate(new MigratorState { SqlClient = sqlClient, MongoClient = mongoClient, IdRange = idRange });
+                });
+
+        private static void Migrate(MigratorState state)
         {
-            var connectionString = "mongodb://localhost";
-            return new MongoClient(connectionString);
+
         }
+
+        private static int FindLastId(SqlServerLogsEntities sqlClient)
+            => sqlClient.CustomsApprovalLogs
+                .OrderByDescending((c) => c.Id)
+                .First()
+                .Id;
+
+        private static MongoClient CreateMongoClient()
+            => new MongoClient("mongodb://localhost");
     }
 }
