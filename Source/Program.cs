@@ -11,22 +11,34 @@ namespace CAP.SQLToMongoMigrator.Source
     { 
         internal static void Main(string[] args)
         {
-            using(var sqlClient = new SqlServerLogsEntities())
-            {
-                int lastId = FindLastId(sqlClient);
-                IList<IntRange> sqlServerParts = new List<IntRange>();
+            Console.WriteLine("Starting up!");
 
-                for (int i = 0; i <= lastId; i += 1000)
-                    sqlServerParts.Add(new IntRange(i, i + 999));
+            int lastId;
+            using (var sqlClient = new SqlServerLogsEntities())
+                lastId = FindLastId(sqlClient);
 
-                RunMigrators(CreateSqlClient, sqlServerParts, CreateMongoClient);
-            }
+            Console.WriteLine($"Last Id is '{ lastId }'");
+
+            IList<IntRange> sqlServerParts = new List<IntRange>();
+
+            for (int i = 0; i <= lastId; i += 1000)
+                sqlServerParts.Add(new IntRange(i, i + 999));
+
+            Console.WriteLine($"Entries have been split into '{ sqlServerParts.Count() }' parts!");
+            Console.WriteLine("Starting migration!");
+
+            RunMigrators(CreateSqlClient, sqlServerParts, CreateMongoClient);
+
+            Console.WriteLine("Migration finished!");
         }
 
         private static void RunMigrators(Func<SqlServerLogsEntities> sqlClientFactory, IList<IntRange> sqlServerParts, Func<MongoClient> mongoClientFactory) 
             => Parallel.ForEach(sqlServerParts, (idRange) =>
                 {
+                    string uniqueMigrationId = Guid.NewGuid().ToString();
+                    Console.WriteLine($"[{ uniqueMigrationId }] Migrating ids '{ idRange.Min }' to '{ idRange.Max }'");
                     Migrate(new MigratorState { SqlClientFactory = sqlClientFactory, MongoClientFactory = mongoClientFactory, IdRange = idRange });
+                    Console.WriteLine($"[{ uniqueMigrationId }] Migration done!");
                 });
 
         private static void Migrate(MigratorState state)
