@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using CAP.SQLToMongoMigrator.Model;
+using MongoDB.Driver;
 
 namespace CAP.SQLToMongoMigrator.Source
 {
@@ -6,7 +7,17 @@ namespace CAP.SQLToMongoMigrator.Source
     {
         internal static void Main(string[] args)
         {
-            var mongoClient = new MongoClient();
+            var mongoClient = CreateMongoClient();
+            using(var sqlClient = new SqlServerLogsEntities())
+            {
+
+            }
+        }
+
+        private static MongoClient CreateMongoClient()
+        {
+            var connectionString = "mongodb://localhost";
+            return new MongoClient(connectionString);
         }
     }
 }
